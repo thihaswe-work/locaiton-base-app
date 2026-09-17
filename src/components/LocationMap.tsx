@@ -10,14 +10,16 @@ import {
 } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import type { Location, LocationStatus, User } from '../locations'
+import type { Position } from '../geo'
 
-const COLORS = {
+const COLORS: Record<LocationStatus, string> = {
   available: '#ef4444',
   checkedin: '#eab308',
   checkedout: '#22c55e',
 }
 
-function getPin(color) {
+function getPin(color: string) {
   return L.divIcon({
     className: '',
     html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></div>`,
@@ -27,12 +29,22 @@ function getPin(color) {
   })
 }
 
-function FlyTo({ target }) {
+function FlyTo({ target }: { target: [number, number] | null }) {
   const map = useMap()
   if (target) {
     map.flyTo(target, 18, { duration: 1.2 })
   }
   return null
+}
+
+interface LocationMapProps {
+  locations: Location[]
+  users?: User[]
+  onSelect: (loc: Location) => void
+  activeLocation?: Location | null
+  userPosition?: Position | null
+  userColor?: string
+  geofenceRadius?: number
 }
 
 export default function LocationMap({
@@ -43,8 +55,8 @@ export default function LocationMap({
   userPosition = null,
   userColor = '#2563eb',
   geofenceRadius = 10,
-}) {
-  const [focus, setFocus] = useState(null)
+}: LocationMapProps) {
+  const [focus, setFocus] = useState<[number, number] | null>(null)
 
   return (
     <MapContainer

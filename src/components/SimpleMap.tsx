@@ -8,14 +8,15 @@ import {
 } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
+import type { Location, LocationStatus } from '../locations'
 
-const COLORS = {
+const COLORS: Record<LocationStatus, string> = {
   available: '#ef4444',
   checkedin: '#eab308',
   checkedout: '#22c55e',
 }
 
-function getPin(color) {
+function getPin(color: string) {
   return L.divIcon({
     className: '',
     html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);"></div>`,
@@ -25,7 +26,7 @@ function getPin(color) {
   })
 }
 
-function FlyTo({ target }) {
+function FlyTo({ target }: { target: [number, number] | null }) {
   const map = useMap()
   if (target) {
     map.flyTo(target, 16, { duration: 1.2 })
@@ -33,8 +34,13 @@ function FlyTo({ target }) {
   return null
 }
 
-export default function SimpleMap({ locations, onSelect }) {
-  const [focus, setFocus] = useState(null)
+interface SimpleMapProps {
+  locations: Location[]
+  onSelect: (loc: Location) => void
+}
+
+export default function SimpleMap({ locations, onSelect }: SimpleMapProps) {
+  const [focus, setFocus] = useState<[number, number] | null>(null)
 
   return (
     <MapContainer

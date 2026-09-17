@@ -1,7 +1,9 @@
 import { statusColors, statusLabels } from '../locations'
 import { distanceMeters } from '../geo'
+import type { Location, User } from '../locations'
+import type { Position } from '../geo'
 
-function relTime(ts, now) {
+function relTime(ts: number | null | undefined, now: number): string {
   if (!ts) return '—'
   const seconds = Math.max(0, Math.floor((now - ts) / 1000))
   if (seconds < 60) return `${seconds}s ago`
@@ -10,6 +12,19 @@ function relTime(ts, now) {
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours}h ago`
   return `${Math.floor(hours / 24)}d ago`
+}
+
+interface LiveTrackerProps {
+  user: User | null
+  locations: Location[]
+  now: number
+  position: Position | null
+  geofenceRadius: number
+  onSelect: (loc: Location) => void
+  onCheckIn: (loc: Location) => void
+  onCheckOut: (loc: Location) => void
+  onTravel: (userId: string, loc: Location) => void
+  onMoveAway: (userId: string) => void
 }
 
 export default function LiveTracker({
@@ -23,7 +38,7 @@ export default function LiveTracker({
   onCheckOut,
   onTravel,
   onMoveAway,
-}) {
+}: LiveTrackerProps) {
   if (!user) {
     return (
       <div className="tracker">

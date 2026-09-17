@@ -1,3 +1,17 @@
+import type { FormEvent } from 'react'
+import type { Location, User } from '../locations'
+
+interface UserListProps {
+  users: User[]
+  locations: Location[]
+  selectedUserId: string
+  onSelect: (userId: string) => void
+  onRemove: (userId: string) => void
+  onAddUser: (e: FormEvent<HTMLFormElement>) => void
+  newUserName: string
+  setNewUserName: (value: string) => void
+}
+
 export default function UserList({
   users,
   locations,
@@ -7,7 +21,7 @@ export default function UserList({
   onAddUser,
   newUserName,
   setNewUserName,
-}) {
+}: UserListProps) {
   return (
     <div className="team">
       <h2>Team</h2>

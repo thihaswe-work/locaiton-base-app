@@ -1,24 +1,30 @@
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import SimpleMap from '../components/SimpleMap'
-import { statusLabels, statusColors, YANGON_LOCATIONS } from '../locations'
+import {
+  statusLabels,
+  statusColors,
+  YANGON_LOCATIONS,
+} from '../locations'
+import type { ActivityEntry, Location, LocationStatus } from '../locations'
 
 export default function SimpleDashboard() {
-  const [locations, setLocations] = useState(YANGON_LOCATIONS)
-  const [selected, setSelected] = useState(null)
-  const [log, setLog] = useState([])
+  const [locations, setLocations] = useState<Location[]>(YANGON_LOCATIONS)
+  const [selected, setSelected] = useState<Location | null>(null)
+  const [log, setLog] = useState<ActivityEntry[]>([])
   const [newName, setNewName] = useState('')
   const [newLat, setNewLat] = useState('')
   const [newLng, setNewLng] = useState('')
   const [formError, setFormError] = useState('')
 
-  const updateStatus = (id, status) => {
+  const updateStatus = (id: number, status: LocationStatus) => {
     setLocations((prev) =>
       prev.map((loc) => (loc.id === id ? { ...loc, status } : loc)),
     )
   }
 
-  const handleAddLocation = (e) => {
+  const handleAddLocation = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const name = newName.trim()
     const lat = Number(newLat)
@@ -37,7 +43,7 @@ export default function SimpleDashboard() {
       return
     }
 
-    const newLoc = { id: Date.now(), name, lat, lng, status: 'available' }
+    const newLoc: Location = { id: Date.now(), name, lat, lng, status: 'available' }
     setLocations((prev) => [...prev, newLoc])
     setSelected(newLoc)
     setNewName('')
@@ -46,7 +52,7 @@ export default function SimpleDashboard() {
     setFormError('')
   }
 
-  const handleCheckIn = (loc) => {
+  const handleCheckIn = (loc: Location) => {
     if (loc.status === 'checkedin') return
     updateStatus(loc.id, 'checkedin')
     setLog((prev) => [
@@ -62,7 +68,7 @@ export default function SimpleDashboard() {
     ])
   }
 
-  const handleCheckOut = (loc) => {
+  const handleCheckOut = (loc: Location) => {
     if (loc.status !== 'checkedin') return
     updateStatus(loc.id, 'checkedout')
     setLog((prev) => [
@@ -78,7 +84,8 @@ export default function SimpleDashboard() {
     ])
   }
 
-  const selectedLoc = locations.find((l) => selected && l.id === selected.id)
+  const selectedLoc =
+    locations.find((l) => selected && l.id === selected.id) ?? null
 
   return (
     <div className="app-shell">

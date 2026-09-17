@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import LocationMap from '../components/LocationMap'
 import UserList from '../components/UserList'
@@ -17,31 +18,35 @@ import {
   offsetMeters,
   randomNearby,
 } from '../geo'
+import type { ActivityEntry, Location, LocationStatus, User } from '../locations'
+import type { Position } from '../geo'
 
 const LOCATIONS_KEY = 'yangon-dashboard-v2-locations'
 const USERS_KEY = 'yangon-dashboard-v2-users'
 const POSITIONS_KEY = 'yangon-dashboard-v2-positions'
 
 export default function TeamDashboard() {
-  const [locations, setLocations] = useState(() =>
+  const [locations, setLocations] = useState<Location[]>(() =>
     load(LOCATIONS_KEY, YANGON_LOCATIONS),
   )
-  const [users, setUsers] = useState(() => load(USERS_KEY, DEFAULT_USERS))
+  const [users, setUsers] = useState<User[]>(() => load(USERS_KEY, DEFAULT_USERS))
   const [selectedUserId, setSelectedUserId] = useState('all')
-  const [selected, setSelected] = useState(null)
-  const [log, setLog] = useState([])
+  const [selected, setSelected] = useState<Location | null>(null)
+  const [log, setLog] = useState<ActivityEntry[]>([])
   const [now, setNow] = useState(() => Date.now())
   const [actionError, setActionError] = useState('')
-  const [userPositions, setUserPositions] = useState(() => {
-    const stored = load(POSITIONS_KEY, null)
-    if (stored && Object.keys(stored).length) return stored
-    const init = {}
-    users.forEach((user) => {
-      const first = locations.find((l) => l.assignedTo === user.id)
-      if (first) init[user.id] = randomNearby(first, 120, 400)
-    })
-    return init
-  })
+  const [userPositions, setUserPositions] = useState<Record<string, Position>>(
+    () => {
+      const stored = load<Record<string, Position> | null>(POSITIONS_KEY, null)
+      if (stored && Object.keys(stored).length) return stored
+      const init: Record<string, Position> = {}
+      users.forEach((user) => {
+        const first = locations.find((l) => l.assignedTo === user.id)
+        if (first) init[user.id] = randomNearby(first, 120, 400)
+      })
+      return init
+    },
+  )
 
   const [newName, setNewName] = useState('')
   const [newLat, setNewLat] = useState('')
@@ -67,7 +72,8 @@ export default function TeamDashboard() {
     [locations, selectedUserId],
   )
 
-  const selectedLoc = locations.find((l) => selected && l.id === selected.id)
+  const selectedLoc =
+    locations.find((l) => selected && l.id === selected.id) ?? null
 
   const selectedAssigner = selectedLoc
     ? users.find((u) => u.id === selectedLoc.assignedTo) || null
@@ -82,15 +88,15 @@ export default function TeamDashboard() {
   const selectedInRange =
     selectedDist == null || selectedDist <= GEOFENCE_RADIUS_M
 
-  const countBy = (list, status) =>
+  const countBy = (list: Location[], status: LocationStatus) =>
     list.filter((l) => l.status === status).length
 
-  const updateLocation = (id, patch) =>
+  const updateLocation = (id: number, patch: Partial<Location>) =>
     setLocations((prev) =>
       prev.map((l) => (l.id === id ? { ...l, ...patch } : l)),
     )
 
-  const pushLog = (loc, type) => {
+  const pushLog = (loc: Location, type: ActivityEntry['type']) => {
     const assignee = users.find((u) => u.id === loc.assignedTo)
     setLog((prev) => [
       {
@@ -106,7 +112,7 @@ export default function TeamDashboard() {
     ])
   }
 
-  const handleCheckIn = (loc) => {
+  const handleCheckIn = (loc: Location) => {
     if (loc.status === 'checkedin') return
     const assignee = users.find((u) => u.id === loc.assignedTo)
     if (assignee) {
@@ -128,13 +134,13 @@ export default function TeamDashboard() {
     pushLog(loc, 'Check In')
   }
 
-  const handleCheckOut = (loc) => {
+  const handleCheckOut = (loc: Location) => {
     if (loc.status !== 'checkedin') return
     updateLocation(loc.id, { status: 'checkedout', lastCheckOut: Date.now() })
     pushLog(loc, 'Check Out')
   }
 
-  const handleAssign = (id, userId) => {
+  const handleAssign = (id: number, userId: string) => {
     updateLocation(id, {
       assignedTo: userId || null,
       status: 'available',
@@ -143,7 +149,7 @@ export default function TeamDashboard() {
     })
   }
 
-  const travelTo = (userId, loc) => {
+  const travelTo = (userId: string, loc: Location) => {
     if (!userId || !loc) return
     setUserPositions((prev) => ({
       ...prev,
@@ -152,7 +158,7 @@ export default function TeamDashboard() {
     setActionError('')
   }
 
-  const moveAway = (userId) => {
+  const moveAway = (userId: string) => {
     setUserPositions((prev) => {
       const base = prev[userId]
       if (!base) return prev
@@ -161,16 +167,16 @@ export default function TeamDashboard() {
     setActionError('')
   }
 
-  const handleSelectUser = (userId) => {
+  const handleSelectUser = (userId: string) => {
     setSelectedUserId(userId)
     setSelected(null)
   }
 
-  const handleAddUser = (e) => {
+  const handleAddUser = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const name = newUserName.trim()
     if (!name) return
-    const user = {
+    const user: User = {
       id: `u-${Date.now()}`,
       name,
       color: USER_COLORS[users.length % USER_COLORS.length],
@@ -184,7 +190,7 @@ export default function TeamDashboard() {
     handleSelectUser(user.id)
   }
 
-  const handleRemoveUser = (userId) => {
+  const handleRemoveUser = (userId: string) => {
     setUsers((prev) => prev.filter((u) => u.id !== userId))
     setUserPositions((prev) => {
       const next = { ...prev }
@@ -201,7 +207,7 @@ export default function TeamDashboard() {
     if (selectedUserId === userId) handleSelectUser('all')
   }
 
-  const handleAddLocation = (e) => {
+  const handleAddLocation = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const name = newName.trim()
     const lat = Number(newLat)
@@ -220,7 +226,7 @@ export default function TeamDashboard() {
       return
     }
 
-    const newLoc = {
+    const newLoc: Location = {
       id: Date.now(),
       name,
       lat,
@@ -454,13 +460,13 @@ export default function TeamDashboard() {
                             selectedInRange ? (
                               <span>
                                 {selectedAssigner.name} is in range (
-                                {Math.round(selectedDist)} m)
+                                {Math.round(selectedDist ?? 0)} m)
                               </span>
                             ) : (
                               <span>
                                 {selectedAssigner.name} is{' '}
-                                {Math.round(selectedDist)} m away — needs to be
-                                within {GEOFENCE_RADIUS_M} m
+                                {Math.round(selectedDist ?? 0)} m away — needs to
+                                be within {GEOFENCE_RADIUS_M} m
                               </span>
                             )
                           ) : (
@@ -483,7 +489,7 @@ export default function TeamDashboard() {
                             className="btn btn-checkin"
                             disabled={
                               selectedLoc.status === 'checkedin' ||
-                              (selectedAssigner && !selectedInRange)
+                              (selectedAssigner != null && !selectedInRange)
                             }
                             onClick={() => handleCheckIn(selectedLoc)}
                           >

@@ -1,16 +1,46 @@
-export const statusColors = {
+export type LocationStatus = 'available' | 'checkedin' | 'checkedout'
+
+export interface Location {
+  id: number
+  name: string
+  lat: number
+  lng: number
+  status: LocationStatus
+  assignedTo?: string | null
+  sessions?: number
+  lastCheckIn?: number | null
+  lastCheckOut?: number | null
+}
+
+export interface User {
+  id: string
+  name: string
+  color: string
+}
+
+export interface ActivityEntry {
+  id: string
+  name: string
+  user?: string
+  type: 'Check In' | 'Check Out'
+  time: string
+  lat: string
+  lng: string
+}
+
+export const statusColors: Record<LocationStatus, string> = {
   available: '#ef4444',
   checkedin: '#eab308',
   checkedout: '#22c55e',
 }
 
-export const statusLabels = {
+export const statusLabels: Record<LocationStatus, string> = {
   available: 'Available',
   checkedin: 'Checked In',
   checkedout: 'Checked Out',
 }
 
-export const USER_COLORS = [
+export const USER_COLORS: string[] = [
   '#2563eb',
   '#db2777',
   '#059669',
@@ -20,13 +50,13 @@ export const USER_COLORS = [
   '#0891b2',
 ]
 
-export const DEFAULT_USERS = [
+export const DEFAULT_USERS: User[] = [
   { id: 'u1', name: 'Aung Aung', color: '#2563eb' },
   { id: 'u2', name: 'Su Su', color: '#db2777' },
   { id: 'u3', name: 'Kyaw Kyaw', color: '#059669' },
 ]
 
-export const YANGON_LOCATIONS = [
+export const YANGON_LOCATIONS: Location[] = [
   { id: 1, name: 'Shwedagon Pagoda', lat: 16.7983, lng: 96.1499, status: 'available', assignedTo: 'u1', sessions: 0, lastCheckIn: null, lastCheckOut: null },
   { id: 2, name: 'Sule Pagoda', lat: 16.7746, lng: 96.1587, status: 'available', assignedTo: 'u1', sessions: 0, lastCheckIn: null, lastCheckOut: null },
   { id: 3, name: 'Bogyoke Aung San Market', lat: 16.7847, lng: 96.1569, status: 'available', assignedTo: 'u1', sessions: 0, lastCheckIn: null, lastCheckOut: null },
